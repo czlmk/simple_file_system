@@ -1,5 +1,5 @@
 /*
-file system code
+simple file system
 */
 
 #include <stdio.h>
