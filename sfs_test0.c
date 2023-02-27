@@ -18,5 +18,5 @@ int main() {
     sfs_fread(f, out_data, sizeof(out_data)+1);
     printf("%s\n", out_data);
     sfs_fclose(f);
-    //sfs_remove("some_name.txt");
+    sfs_remove("some_name.txt");
 }

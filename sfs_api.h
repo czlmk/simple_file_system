@@ -22,12 +22,4 @@ int sfs_fseek(int, int);
 
 int sfs_remove(char*);
 
-
-void reset_inode(int);
-
-void update_tables();
-
-int file_exist(char*);
-int ffree_block();
-int convert_blk_to_disk(int, int);
 #endif

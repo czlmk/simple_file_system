@@ -1,6 +1,6 @@
-/*
-simple file system
-*/
+/*------------------------*/
+/* simple file system api */
+/*------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,9 +19,9 @@ simple file system
 #define NUM_DIR_FDT SIZE_DIR/sizeof(dir_entry_t)
 #define SIZE_DIR NUM_DIR_BLKS*BLK_SIZE
 
-/*
-Used structures
-*/
+
+/* Used structures */
+
 //block type
 typedef struct _block_t {
     char data[BLK_SIZE];
@@ -43,10 +43,12 @@ typedef struct _super_block_t{
     uint64_t inode_table_len;
     uint64_t root_dir_inode;
 } super_block_t;
+
 //structure for indirect pointer
 typedef struct {
     int ind_pts[BLK_SIZE/4];
 } indirect_t;
+
 //inode
 typedef struct _inode_t{
     int mode;
@@ -80,7 +82,7 @@ dir_entry_t *dir = (dir_entry_t*) dirmem;
 indirect_t indirect_ptr;
 char temp[BLK_SIZE];
 
-//update directories and tables
+/* update directories and tables */
 void update_tables(){
         
         write_blocks(0, 1, (void*)&supblk);//write super block
@@ -99,7 +101,7 @@ void reset_inode(int inode_ind){
     } 
     itable[inode_ind].ind_ptrs = -1; 
 }
-//returns bit map index of a free block
+/* returns bit map index of a free block */
 int ffree_block(){
     for(int j = 0; j<NUM_BLKS;j++){
         if(bitmap.map[j] == '1'){
@@ -107,7 +109,7 @@ int ffree_block(){
         }
     }  
 }
-//convert to disk num, also set up disk block by setting free map
+/* convert to disk num, also set up disk block by setting free map */
 int convert_blk_to_disk(int inode_index, int blk_num){
     //if block less than 12, look in direct pointers
     //check if blk_num out of max file range
@@ -201,8 +203,6 @@ void mksfs(int fresh){
             strcpy(dir[n].filename , "");
         }
         //set bitmap
-        //set the first block(super block) + number of blocks for
-        //inodes + blocks for bitmap + directory in data blocks to 0 as they are used
         for(int i = 0; i<1+NUM_INO_BLKS+NUM_BITMAP_BLKS+NUM_DIR_BLKS+1;i++){
             bitmap.map[i] = '0';
         }
@@ -221,7 +221,7 @@ void mksfs(int fresh){
         itable[0].mode = current_file_ind;
         itable[0].link_cnt = 1;
         itable[0].size = 0;
-        itable[0].ptrs[0] = NUM_INO_BLKS+1+NUM_BITMAP_BLKS; //super block plus blocks for inodes and bitmap
+        itable[0].ptrs[0] = NUM_INO_BLKS+1+NUM_BITMAP_BLKS;
         //write tables to disks
         update_tables();
     }
@@ -242,10 +242,10 @@ void mksfs(int fresh){
     }
     return;
 }
+/* get name of next file */
 int sfs_getnextfilename(char* filename){
     int cur_ind = itable[0].mode;
     for( cur_ind; cur_ind<NUM_DIR_FDT;cur_ind++){
-        //if dir. ava is 0 return name and update cur index
         
         if(dir[cur_ind+1].ava ==0){
             //copy name of file
@@ -257,7 +257,7 @@ int sfs_getnextfilename(char* filename){
     }
     return 0;
 }
-
+/* get file size */
 int sfs_getfilesize(const char* path){
 
     int inode = file_exist(path);
@@ -268,8 +268,7 @@ int sfs_getfilesize(const char* path){
     }
     return itable[inode].size;
 }
-//if file exist in directory return inode index
-//return -1 if not found
+/* if file exist in directory return inode index return -1 if not found */
 int file_exist(char* file_name){
     
     int i;
@@ -366,7 +365,7 @@ int sfs_fopen(char* file_name){
         }
     }
 }
-
+/* closes file */
 int sfs_fclose(int in){
     if(fdt[in].ava == 0){
         fdt[in].ava = 1;
@@ -376,18 +375,15 @@ int sfs_fclose(int in){
     }
     return -1;
 }
+/* write to file */
 int sfs_fwrite(int fileID, const char *buf, int length){
     //check if fileid exist in fdt
     
     if(fdt[fileID].ava){
         return -1;
     }
-    //current location 
+    //variables
     int cloc = fdt[fileID].rw_ptr;
-    //array to hold block read in
-    //char temp[BLK_SIZE];
-    //char temp1[BLK_SIZE];
-    
     length = length ;
     int len_left = length;
     int len_to_write;
@@ -420,9 +416,7 @@ int sfs_fwrite(int fileID, const char *buf, int length){
         //read in block
         read_blocks(disk_num, 1,(void*) temp);
        
-        //check how much to copy into block, if len_left> (blocksize-loc_in_blk)
-        //len_to_write = blocksize - loc_in_blk
-        //length left = length left - len_to_write
+        //check how much to copy into block, 
         if(len_left>(BLK_SIZE-loc_in_blk)){
             len_to_write = BLK_SIZE-loc_in_blk;
             len_left = len_left - len_to_write;
@@ -434,10 +428,8 @@ int sfs_fwrite(int fileID, const char *buf, int length){
         }
         
         //write using memcpy to temp
-       
-
-        int s = temp+loc_in_blk;
-        int b = buf+buf_copied;
+        //int s = temp+loc_in_blk;
+        //int b = buf+buf_copied;
       
         memcpy(temp+loc_in_blk,buf+buf_copied,len_to_write);
        
@@ -458,12 +450,11 @@ int sfs_fwrite(int fileID, const char *buf, int length){
     fdt[fileID].rw_ptr = itable[fdt[fileID].inode].size;
     
     update_tables();
-    //read_blocks(disk_num,1,temp1);
     
     return length;
 }
 
-
+/* read from file */
 int sfs_fread(int fileID, char *buf, int length){
     //check if file exists in fdt
     if(fdt[fileID].ava){
@@ -538,7 +529,7 @@ int sfs_fread(int fileID, char *buf, int length){
     return length;
 }
 
-//seek to location from beginning
+/* seek to location from beginning */
 int sfs_fseek(int fileID, int loc){
     if(loc > itable[fdt[fileID].inode].size||fdt[fileID].inode == 0 ||fdt[fileID].ava == 1){
         return -1;
@@ -547,9 +538,8 @@ int sfs_fseek(int fileID, int loc){
     return 0;
 }
 
-//The sfs_remove()
-//removes the file from the directory entry, releases the i-Node and releases the data blocks used by the file
-//(i.e., the data blocks are added to the free block list/map), so that they can be used by new files in the future.
+/* removes the file from the directory entry, releases the i-Node and releases the data blocks used by the file
+(i.e., the data blocks are added to the free block list/map), so that they can be used by new files in the future.*/
 int sfs_remove(char* file_name){
     //check if file exist
     
