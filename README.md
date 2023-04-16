@@ -13,7 +13,7 @@ http://libfuse.github.io/doxygen/
 ## Usage
 first clone repository
 ```
-git clone https://github.com/simple_file_system/space-invader.git
+git clone https://github.com/simple_file_system
 ```
 
 After navigating to "simple_file_system" file, to create excutable file which will excute instructions from sfs_test0.c do
